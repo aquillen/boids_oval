@@ -3,23 +3,24 @@
 
 // set up a mass spring system
 // depends on ks, gammas, nnodes, big_radius, dt, mass
-function Mass_spring_system(nnodes,big_radius){
+function Mass_spring_system(nnodes,big_radius,node_mass){
   
   // constructor
   this.node_set = []; // Initialize the node array
   this.spring_set = []; // Initialize the spring array
   this.nsprings = 0;  // number of springs
-  this.eps = 1e-6; // smoothing length
+  this.eps = 1e-6; // smoothing length in constructor ..
   this.ks = ks; // to set spring constants
   this.gammas = gammas; // to set dissipation rates
   this.gamma_node = gamma_node;
   this.dx = dx;
+  this.node_mass = node_mass;
 
   // construct nodes in a circle, node origin is center of canvas
   for (let i = 0; i < nnodes; i++) {
     let b = new Node(big_radius*cos(i*2.0*PI/nnodes),
                      big_radius*sin(i*2.0*PI/nnodes),this.dx);
-    b.m = node_mass; // node mass
+    b.m = this.node_mass; // node mass
     this.node_set.push(b);
   }
   
@@ -35,8 +36,8 @@ function Mass_spring_system(nnodes,big_radius){
   }
   // in constructor, three sets of springs added
   this.add_spring_set(1,1.0*this.ks,1*this.gammas); // add nearest neighbor springs
-  this.add_spring_set(2,0.5*this.ks,1*this.gammas); // add springs to every other node
-  this.add_spring_set(3,0.3*this.ks,1*this.gammas); // add springs to every 3rd node
+  this.add_spring_set(2,1.0*this.ks,1*this.gammas); // add springs to every other node
+  this.add_spring_set(3,1.0*this.ks,1*this.gammas); // add springs to every 3rd node
   
   // set spring k to its rest length
   this.rest_spring = function(k){
@@ -54,8 +55,14 @@ function Mass_spring_system(nnodes,big_radius){
       this.rest_spring(k);
     }
   }
-    
-    
+  
+  // if you want to change ks for all springs
+  this.updateks = function(){
+    for(let k=0;k< this.nsprings; k++){
+      this.spring_set[k].ks = this.ks;  // note assumes all springs the same ks!
+    }
+  }
+      
   // for adding a small wedge to the spring system
   this.add_wedge = function(i0,di){
       let n = this.node_set.length;

@@ -21,7 +21,6 @@ const force_amp = 10.0; // for interactions between boids and nodes
 const force_k = 0.2;  // 1/scale for interactions between boids and nodes
 const vforce_amp = 0.00;  // damping
 
-
 // distances for boid forces 
 const d_repel = 50;
 const d_attract = 20;  // scale over which attractive force applies
@@ -37,19 +36,13 @@ const ndt=3;  // number of time steps per display update
 
 const propel_force = 1; // not currently used
 
-const slider_y = 10;
-const slider_len = 80;
-const slider_len_s = '80px'
-const slider_dx = slider_len + 20;
-const repel_force_slider_x = 10;
-const d_repel_slider_x      = repel_force_slider_x + 1*slider_dx;
-const align_force_slider_x  = repel_force_slider_x + 2*slider_dx;
-const d_align_slider_x      = repel_force_slider_x + 3*slider_dx;
-
-var repel_force_slider; 
-var d_repel_slider;
-var align_force_slider;
-var d_align_slider;
+// sliders 
+var repel_force_Tslider; 
+var d_repel_Tslider;
+var align_force_Tslider;
+var d_align_Tslider;
+var gamma_node_Tslider;
+var ks_Tslider;
 
 
 function setup() {
@@ -58,7 +51,7 @@ function setup() {
   let yheight = height*dx;
   let big_radius = rad_fac*xwidth/2;
   // set up masses/springs
-  mass_spring_system = new Mass_spring_system(nnodes,big_radius);
+  mass_spring_system = new Mass_spring_system(nnodes,big_radius,node_mass);
     
   mass_spring_system.display_springs();  // display springs
   mass_spring_system.display_nodes();   // display nodes
@@ -70,26 +63,25 @@ function setup() {
   // let node_set = mass_spring_system.node_set;
   // boid_node_interact(boid_set,node_set,force_amp,force_k,vforce_amp);
   
-  repel_force_slider = createSlider(0, 2*repel_force,repel_force,repel_force/20);
+  // set up some sliders
+  repel_force_Tslider = new Tslider(0,'repel',0,repel_force); 
   flock.repel_force = repel_force;
-  repel_force_slider.position(repel_force_slider_x, slider_y);
-  repel_force_slider.style('width', slider_len_s);
   
-  d_repel_slider = createSlider(0, 2*d_repel,d_repel,d_repel/20);
+  d_repel_Tslider = new Tslider(1, 'd_repel',0,d_repel);
   flock.d_repel = d_repel;
-  d_repel_slider.position(d_repel_slider_x, slider_y);
-  d_repel_slider.style('width', slider_len_s);
   
-  align_force_slider = createSlider(0, 2*align_force,align_force,align_force/20);
+  align_force_Tslider = new Tslider(2, 'align',0,align_force);
   flock.align_force = align_force;
-  align_force_slider.position(align_force_slider_x, slider_y);
-  align_force_slider.style('width',  slider_len_s);
   
-  d_align_slider = createSlider(0, 2*d_align,d_align,d_align/20);
+  d_align_Tslider = new Tslider(3, 'd_align',0,d_align);
   flock.d_align = d_align;
-  d_align_slider.position(d_align_slider_x, slider_y);
-  d_align_slider.style('width', slider_len_s);
   
+  gamma_node_Tslider = new Tslider(4, 'nodedamp',0,gamma_node);
+  mass_spring_system.gamma_node = gamma_node;
+  
+  ks_Tslider = new Tslider(5, 'springk',ks/4,ks);
+  mass_spring_system.ks = ks;
+ 
 }
 
 var dcount=0; // used for centroiding display
@@ -138,15 +130,22 @@ function draw() {
         }
       }
    }
-   flock.repel_force = repel_force_slider.value();
-   flock.align_force = align_force_slider.value();
-   flock.d_repel = d_repel_slider.value();
-   flock.d_align = d_align_slider.value();
-   fill(0);
-   text('repel',repel_force_slider_x + 10,slider_y+20);
-   text('align',align_force_slider_x + 10,slider_y+20);
-   text('d_repel',d_repel_slider_x + 10,slider_y+20);
-   text('d_align',d_align_slider_x + 10,slider_y+20);
+   
+   // use slider info! update flock and springsystem params
+   flock.repel_force = repel_force_Tslider.slider.value();
+   flock.align_force = align_force_Tslider.slider.value();
+   flock.d_repel = d_repel_Tslider.slider.value();
+   flock.d_align = d_align_Tslider.slider.value();
+   mass_spring_system.gamma_node = gamma_node_Tslider.slider.value();
+   mass_spring_system.ks = ks_Tslider.slider.value();
+   mass_spring_system.updateks(); // propagate to all springs
+   repel_force_Tslider.text();
+   align_force_Tslider.text();
+   d_repel_Tslider.text();
+   d_align_Tslider.text();
+   gamma_node_Tslider.text();
+   ks_Tslider.text();
+   
 }
 
 // exponential short range forces between boids and nodes
